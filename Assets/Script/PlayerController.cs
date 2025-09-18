@@ -47,6 +47,7 @@ public class PlayerController : MonoBehaviour
         //}
 
           dir.x = x;
+        dir.z = z;
 
         float z1 = z;
         float x1 = x;
@@ -72,11 +73,11 @@ public class PlayerController : MonoBehaviour
         //カメラの動き
         float cx= Input.GetAxisRaw("Vertical2");
         float cy = Input.GetAxisRaw("Horizontal2");
-       // Debug.Log(Input.GetAxisRaw("Vertical2"));
-        transform.eulerAngles= new Vector3(transform.eulerAngles.x, cy, transform.eulerAngles.z);
-        CamMove.transform.RotateAround(transform.position,    CamPos.transform.up   , cy * 250 * Time.deltaTime);
-        CamMove.transform.RotateAround(transform.position, -1*CamMove.transform.right, cx * 250 * Time.deltaTime);
-        
+        // Debug.Log(Input.GetAxisRaw("Vertical2"));
+        // transform.eulerAngles= new Vector3(transform.eulerAngles.x, cy, transform.eulerAngles.z);
+        CamMove.transform.RotateAround(transform.position, CamPos.transform.up, cy * 250 * Time.deltaTime);
+        CamMove.transform.RotateAround(transform.position, -1 * CamMove.transform.right, cx * 250 * Time.deltaTime);
+
         // IsConfirmPressed();
     }
     //コントローラの識別
