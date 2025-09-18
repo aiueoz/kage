@@ -1,5 +1,6 @@
 ﻿using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class PlayeController2 : MonoBehaviour
 {
@@ -8,8 +9,9 @@ public class PlayeController2 : MonoBehaviour
     [SerializeField] float rotationSpeed = 10f;
     [SerializeField] float gravity = -9.81f;
     [SerializeField] float jumpPower = 5f;
+    float Speed;
 
-    [Header("参照")]
+   [Header("参照")]
     [SerializeField] Transform cameraTransform;
     public bool UDRevers = false;
     public bool RLRevers =false;
@@ -23,9 +25,13 @@ public class PlayeController2 : MonoBehaviour
     [Header("地面設置関連")]
     [SerializeField]  float groungRaylength;
     [SerializeField] LayerMask ground;
-    [SerializeField] BoxCollider groundCollider;
+    [SerializeField] GameObject groundCollider;
 
-   
+    [Header("アニメーション関連")]
+    [SerializeField] Animator anim;
+    bool RunFlag = false;
+    bool WalkFlag = false;
+    bool WaitFlag=false;
 
     private CharacterController controller;
     private Vector3 velocity;
@@ -48,9 +54,26 @@ public class PlayeController2 : MonoBehaviour
         if(RLRevers) RL = -1;else RL = 1;
         //接地判定       
         GroundCheck();
-      
+       
         //カメラ操作
         CameraWork();    
+    }
+    void Anim()
+    {  
+       
+
+        //if ((Speed <= 0.6f && Speed != 0) && !WalkFlag) {
+        //    anim.CrossFade("Walk", 0.15f);
+        //    WalkFlag = true;
+        //}
+        //else WalkFlag = true;
+
+        //if (Speed == 0 && !WaitFlag)
+        //{
+        //    anim.CrossFade("Wait", 0.15f);
+        //}
+        //else WaitFlag = true;
+        
     }
     private void FixedUpdate()
     {
@@ -69,16 +92,59 @@ public class PlayeController2 : MonoBehaviour
         {
             velocity.y = -2f; // 接地安定化
         }
-        Debug.Log(isGrounded);
+       // Debug.Log(isGrounded);
     }
     //プレイヤーの移動関連
     private void Move()
-    {
+    { 
+        
         // 入力
-        float horizontal = Input.GetAxis("Horizontal");
+        float horizontal = Input.GetAxis("Horizontal");      
         float vertical = Input.GetAxis("Vertical");
+        //スティックがニュートラル時に動かないようにする
+        if (horizontal < -0.12f && horizontal > 0.12f) horizontal = 0;
+        if (vertical < -0.12f&& vertical > 0.12f) vertical = 0;
         Vector3 inputDir = new Vector3(horizontal, 0, vertical).normalized;
+        //スティックの方向け具合で速度を変えるための処理
+        if (horizontal < 0) horizontal *= -1;
+        if (vertical < 0) vertical *= -1;
+        Speed =vertical+horizontal;
+        if (Speed >= 1)
+        {
+            Speed = 1;
+        }
+        if (Speed > 0.6f)
+        {
+            if (!anim.GetCurrentAnimatorStateInfo(0).IsName("Run"))
+            {
+                anim.CrossFade("Run", 0.15f);
 
+            }
+
+        }
+        else if (Speed <= 0.6f && Speed != 0)
+        {
+            if (!anim.GetCurrentAnimatorStateInfo(0).IsName("Walk"))
+            {
+                anim.CrossFade("Walk", 0.15f);
+
+            }
+
+        }
+        else if (Speed == 0)
+        {
+            if (!anim.GetCurrentAnimatorStateInfo(0).IsName("Wait"))
+
+            {
+                anim.CrossFade("Wait", 0.15f);
+
+            }
+
+        }
+
+
+        Debug.Log(Speed);
+       
         if (inputDir.magnitude >= 0.1f)
         {
             // カメラ基準の移動方向に変換
@@ -87,7 +153,8 @@ public class PlayeController2 : MonoBehaviour
             transform.rotation = Quaternion.Euler(0, angle, 0);
 
             Vector3 moveDir = Quaternion.Euler(0, targetAngle, 0) * Vector3.forward;
-            controller.Move(moveDir.normalized * moveSpeed * Time.deltaTime);
+            Anim();
+            controller.Move(moveDir.normalized * moveSpeed *Speed* Time.deltaTime);
         }
     }
     //カメラワーク関連
@@ -98,8 +165,9 @@ public class PlayeController2 : MonoBehaviour
 
         //右スティック入力
         float cx = Input.GetAxisRaw("Vertical2");   // 上下
+        if (cx < -0.12f && cx > 0.12f)cx = 0;
         float cy = Input.GetAxisRaw("Horizontal2"); // 左右
-
+        if (cy < -0.12f &&cy > 0.12f) cy = 0;
         // --- 左右回転 ---
         cameraPos.RotateAround(transform.position, Vector3.up, RL*cy * 250 * Time.deltaTime);
 
@@ -130,21 +198,7 @@ public class PlayeController2 : MonoBehaviour
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
-    //private void OnTriggerStay(Collider other)
-    //{
-    //    if (other.CompareTag("Ground"))
-    //    {
-    //        Debug.Log("jlkajf");
-    //        isGrounded = true;
-    //    }
-    //}
-    //private void OnTriggerExit(Collider other)
-    //{
-    //    if (other.CompareTag("Ground"))
-    //    {
-    //        isGrounded =false;
-    //    }
-    //}
+  
 
     private float rotationVelocity;
 }
